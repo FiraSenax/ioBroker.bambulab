@@ -14,7 +14,7 @@ const { default: axios } = require('axios'); // Http request library
 const jsonExplorer = require('iobroker-jsonexplorer'); // Use jsonExplorer library
 const convert = require('./lib/converter'); // Load converter functions
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
-const { canonicalizeSerial, decodeH2NozzleTemperatures } = require('./lib/h2');
+const { canonicalizeSerial, decodeH2NozzleTemperatures, decodeH2ChamberTemperatures } = require('./lib/h2');
 
 let client; // Memory to store client connection information
 const clientConnection = {
@@ -240,6 +240,7 @@ class Bambulab extends utils.Adapter {
 
             if (message.print) {
                 Object.assign(message.print, decodeH2NozzleTemperatures(message.print.device?.extruder?.info));
+                Object.assign(message.print, decodeH2ChamberTemperatures(message.print.device?.ctc?.info?.temp));
 
                 // Modify values of JSON for states which need modification
                 message.print.control = {};

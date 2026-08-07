@@ -1,7 +1,12 @@
 'use strict';
 
 const { expect } = require('chai');
-const { canonicalizeSerial, decodeH2NozzleTemperatures } = require('./lib/h2');
+const {
+    canonicalizeSerial,
+    decodeH2NozzleTemperatures,
+    decodeH2TemperatureWord,
+    decodeH2ChamberTemperatures,
+} = require('./lib/h2');
 
 describe('H2 printer protocol helpers', () => {
     it('canonicalizes the serial used in case-sensitive MQTT topics', () => {
@@ -30,5 +35,20 @@ describe('H2 printer protocol helpers', () => {
             ]),
         ).to.deep.equal({});
         expect(decodeH2NozzleTemperatures(undefined)).to.deep.equal({});
+    });
+
+    it('decodes live H2C chamber target and current temperatures', () => {
+        // Observed on an H2C: 0x0041003c = target 65 °C, current 60 °C.
+        expect(decodeH2TemperatureWord(0x0041003c)).to.deep.equal({ current: 60, target: 65 });
+        expect(decodeH2ChamberTemperatures(0x0041003c)).to.deep.equal({
+            chamber_temper: 60,
+            chamber_target_temper: 65,
+        });
+    });
+
+    it('rejects invalid or implausible packed temperature words', () => {
+        expect(decodeH2TemperatureWord('4259900')).to.equal(null);
+        expect(decodeH2TemperatureWord(0x0200003c)).to.equal(null);
+        expect(decodeH2ChamberTemperatures(undefined)).to.deep.equal({});
     });
 });
